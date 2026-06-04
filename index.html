@@ -1,85 +1,80 @@
 <!DOCTYPE html>
 <html lang="vi">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
-    <title>Ứng Dụng Xem Video 360°</title>
-    <script src="https://aframe.io/releases/1.4.2/aframe.min.js"></script>
-    <style>
-        body { margin: 0; overflow: hidden; background-color: #000; }
-        
-        /* Nút yêu cầu kích hoạt dành riêng cho thiết bị iOS */
-        #start-btn {
-            position: fixed;
-            top: 50%;
-            left: 50%;
-            transform: translate(-50%, -50%);
-            z-index: 9999;
-            padding: 15px 30px;
-            background-color: #222;
-            color: #fff;
-            border: 2px solid #fff;
-            border-radius: 5px;
-            font-size: 16px;
-            font-weight: bold;
-            cursor: pointer;
-            box-shadow: 0 4px 10px rgba(0,0,0,0.5);
-        }
-    </style>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Video 360</title>
+
+<script src="https://aframe.io/releases/1.4.2/aframe.min.js"></script>
+
+<style>
+body { margin: 0; overflow: hidden; }
+
+#btn {
+    position: fixed;
+    bottom: 20px;
+    left: 50%;
+    transform: translateX(-50%);
+    padding: 12px 25px;
+    background: #0077b6;
+    color: #fff;
+    border: none;
+    border-radius: 25px;
+    z-index: 999;
+}
+</style>
 </head>
+
 <body>
 
-    <button id="start-btn">CHẠM ĐỂ XEM VIDEO 360°</button>
+<button id="btn">PLAY VIDEO</button>
 
-    <a-scene vr-mode-ui="enabled: false">
-        
-        <a-assets>
-            <video id="video360" 
-                   src="video_cua_ban.mp4" 
-                   autoplay 
-                   loop 
-                   muted 
-                   playsinline 
-                   webkit-playsinline
-                   crossorigin="anonymous">
-            </video>
-        </a-assets>
+<a-scene embedded vr-mode-ui="enabled: false">
 
-        <a-videosphere src="#video360" rotation="0 -90 0"></a-videosphere>
+    <a-assets>
+        <!-- QUAN TRỌNG: đúng tên file -->
+        <video id="vid"
+            src="./1.clip.360.mp4"
+            preload="auto"
+            loop
+            crossorigin="anonymous"
+            webkit-playsinline
+            playsinline>
+        </video>
+    </a-assets>
 
-        <a-entity camera look-controls="magicWindowTrackingEnabled: true; touchEnabled: true"></a-entity>
+    <!-- Camera -->
+    <a-camera look-controls="touchEnabled: true"></a-camera>
 
-    </a-scene>
+    <!-- Video 360 -->
+    <a-videosphere src="#vid"></a-videosphere>
 
-    <script>
-        const video = document.getElementById('video360');
-        const btn = document.getElementById('start-btn');
+</a-scene>
 
-        // Hàm xử lý kích hoạt phát video và bật tiếng
-        function startApp() {
-            btn.style.display = 'none';
-            video.play();
-            video.muted = false; // Bỏ tắt tiếng sau khi người dùng click tương tác
+<script>
+const btn = document.getElementById("btn");
+const video = document.getElementById("vid");
+
+btn.onclick = async () => {
+    try {
+        // iOS xin quyền
+        if (typeof DeviceOrientationEvent !== "undefined" &&
+            typeof DeviceOrientationEvent.requestPermission === "function") {
+
+            const permission = await DeviceOrientationEvent.requestPermission();
+            console.log("Permission:", permission);
         }
 
-        // Cơ chế xin quyền cảm biến đặc thù cho iOS (iPhone/iPad từ iOS 13+)
-        if (typeof DeviceOrientationEvent !== 'undefined' && typeof DeviceOrientationEvent.requestPermission === 'function') {
-            btn.addEventListener('click', () => {
-                DeviceOrientationEvent.requestPermission()
-                    .then(permissionState => {
-                        if (permissionState === 'granted') {
-                            startApp();
-                        } else {
-                            alert('Bạn đã từ chối quyền cảm biến. Video sẽ chỉ xem được bằng cách vuốt tay.');
-                            startApp();
-                        }
-                    })
-                    .catch(console.error);
-            });
-        } else {
-            // Đối với Android hoặc Máy tính (PC), chỉ cần một cú click bất kỳ là chạy mượt mà
-            btn.addEventListener('click', startApp);
-        }
-    </script>
+        await video.play();
+
+        btn.style.display = "none";
+
+    } catch (e) {
+        alert("Không phát được video: " + e);
+        console.log(e);
+    }
+};
+</script>
+
 </body>
 </html>
